@@ -13,6 +13,7 @@
     
     <style>
         body {
+            /* Exact classic BBC broadcast sans-serif font stack */
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             background-color: #ffffff;
             color: #111827;
@@ -184,17 +185,17 @@
             document.getElementById('main-footer').style.display = 'none';
         }
 
-        // ==========================================
-        // FIREBASE FIRE-BRIDGE REAL-TIME SYNC
-        // ==========================================
+        // =========================================================================
+        // FIREBASE CREDENTIALS (PASTE YOUR CREATED KEY INSTEAD OF THE MOCK KEYS BELOW)
+        // =========================================================================
         const firebaseConfig = {
-            apiKey: "",
-            authDomain: "default-app-id.firebaseapp.com",
-            projectId: "default-app-id",
-            storageBucket: "default-app-id.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:123456789"
-        };
+  apiKey: "AIzaSyA1...",
+  authDomain: "your-project-id.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project-id.appspot.com",
+  messagingSenderId: "...",
+  appId: "..."
+};
 
         // Initialize Firebase Compatibility Mode
         firebase.initializeApp(firebaseConfig);
