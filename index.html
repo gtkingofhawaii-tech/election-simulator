@@ -6,9 +6,13 @@
     <title>Election Projection Banner</title>
     <!-- Tailwind CSS for modern utility styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDKs for Live Sync (Version 11.6.1) -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+    
     <style>
         body {
-            /* Exact classic BBC broadcast sans-serif font stack */
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             background-color: #ffffff;
             color: #111827;
@@ -42,7 +46,7 @@
             -webkit-appearance: none;
             appearance: none;
         }
-        /* Square utility classes to override standard framework defaults */
+        /* Square utility classes */
         .rounded-none-override {
             border-radius: 0px !important;
         }
@@ -52,7 +56,6 @@
 
     <!-- TOP STICKY BROADCAST BANNER (PLAIN WHITE) -->
     <div class="w-full sticky top-0 z-50 bg-white border-b border-gray-250 shadow-sm">
-        <!-- THE HORIZONTAL PARTY ROW BANNER -->
         <div class="p-1 md:p-2 bg-white">
             <div id="election-banner" class="grid grid-cols-6 gap-1 md:gap-2 max-w-[1920px] mx-auto">
                 <!-- Banner boxes generated dynamically via JS -->
@@ -60,23 +63,36 @@
         </div>
     </div>
 
-    <!-- MAIN INTERACTIVE EDITOR WORKSPACE -->
+    <!-- MAIN INTERACTIVE EDITOR WORKSPACE (Only visible to you, hidden on Wix if viewed via direct live link) -->
     <main id="editor-workspace" class="max-w-7xl w-full mx-auto p-4 md:p-8 flex-grow flex flex-col gap-6 justify-start">
         
-        <!-- AUTO BALANCING ALERTS & TOGGLE SWITCH -->
-        <div class="bg-gray-100 rounded-none-override p-4 border-2 border-gray-300 flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
-            <div class="flex items-center gap-3">
-                <div class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="balance-toggle" class="sr-only peer" checked onchange="toggleBalanceMode(this.checked)">
-                    <!-- Completely square toggle switch -->
-                    <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-none-override peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-none-override after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                    <span class="ml-3 text-sm font-bold text-gray-800 uppercase tracking-tight" id="balance-label">Auto-Balance Mode (Strict 200)</span>
+        <!-- CONNECTION & LIVE STATUS BANNER -->
+        <div class="bg-gray-100 rounded-none-override p-4 border-2 border-gray-300 flex flex-col gap-3">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+                <div class="flex items-center gap-3">
+                    <div class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="balance-toggle" class="sr-only peer" checked onchange="toggleBalanceMode(this.checked)">
+                        <!-- Completely square toggle switch -->
+                        <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-none-override peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-none-override after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                        <span class="ml-3 text-sm font-bold text-gray-800 uppercase tracking-tight" id="balance-label">Auto-Balance Mode (Strict 200)</span>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-4 text-gray-600 font-mono text-center md:text-right">
+                    <span id="sync-status" class="text-amber-600 font-bold uppercase tracking-wider">● Connecting Sync...</span>
+                    <span id="engine-status-text" class="text-emerald-700 font-bold uppercase tracking-wider">● Auto-Balance Active</span>
+                    <span id="unlocked-counter" class="text-gray-500 uppercase text-[10px]">Unlocked: <span id="unlocked-parties-num" class="text-emerald-700 font-bold">6</span></span>
                 </div>
             </div>
-            
-            <div class="text-gray-600 font-mono text-center md:text-right">
-                <span id="engine-status-text" class="text-emerald-700 font-bold mr-2 uppercase tracking-wider">● Auto-Balance Active</span>
-                <span id="unlocked-counter" class="text-gray-500 uppercase text-[10px]">Unlocked: <span id="unlocked-parties-num" class="text-emerald-700 font-bold">6</span></span>
+
+            <!-- Wix Embed Sharing Information -->
+            <div class="mt-2 pt-3 border-t border-gray-200 text-xs text-gray-700">
+                <span class="font-bold uppercase block mb-1">🔗 Wix Live-Sync Link:</span>
+                <p class="mb-2 text-gray-500">Paste the URL below into Wix's "Website Address (URL)" inside the HTML Embed element. It will hide this editor panel and update in real-time as you slide values here!</p>
+                <div class="flex gap-2">
+                    <input type="text" id="wix-share-url" readonly class="w-full bg-white border border-gray-300 p-2 font-mono text-gray-800 rounded-none-override select-all" value="">
+                    <button onclick="copyShareUrl()" class="bg-[#111827] text-white font-bold px-4 py-2 hover:bg-gray-800 rounded-none-override uppercase text-[11px] whitespace-nowrap">Copy URL</button>
+                </div>
             </div>
         </div>
 
@@ -128,7 +144,7 @@
     <!-- Footer -->
     <footer id="main-footer" class="max-w-7xl w-full mx-auto p-4 border-t-2 border-gray-200 text-center text-xs text-gray-500 flex flex-col sm:flex-row justify-between gap-2">
         <p class="uppercase tracking-wider font-semibold text-[10px]">© Broadcast Graphic Engine (Horizontal Top Grid Layout)</p>
-        <p class="uppercase tracking-wider font-semibold text-[10px]">Dynamic Locking & Balance Engine Active</p>
+        <p class="uppercase tracking-wider font-semibold text-[10px]">Real-Time Database Sync Engine Active</p>
     </footer>
 
     <!-- INTERACTIVE ENGINE SCRIPT -->
@@ -155,6 +171,112 @@
         const warningCurrentSum = document.getElementById('warning-current-sum');
         const balanceLabel = document.getElementById('balance-label');
         const engineStatusText = document.getElementById('engine-status-text');
+        const syncStatusText = document.getElementById('sync-status');
+        const wixShareUrlInput = document.getElementById('wix-share-url');
+
+        // Check URL Parameters to see if this is being viewed as "View Only" on Wix
+        const urlParams = new URLSearchParams(window.location.search);
+        const isViewer = urlParams.has('view');
+
+        // If embedded on Wix as a viewer, completely hide the editor workspace and footer
+        if (isViewer) {
+            document.getElementById('editor-workspace').style.display = 'none';
+            document.getElementById('main-footer').style.display = 'none';
+        }
+
+        // ==========================================
+        // FIREBASE FIRE-BRIDGE REAL-TIME SYNC
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "",
+            authDomain: "default-app-id.firebaseapp.com",
+            projectId: "default-app-id",
+            storageBucket: "default-app-id.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:123456789"
+        };
+
+        // Initialize Firebase Compatibility Mode
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Unique dynamic document ID for your specific simulation
+        const simulationDocId = "projection_sim_v1";
+        const docRef = db.collection('artifacts').doc('default-app-id').collection('public').doc('data').collection('election_banner').doc(simulationDocId);
+
+        // Generate and display Wix Shareable Link
+        const currentCleanUrl = window.location.href.split('?')[0];
+        const wixShareableUrl = `${currentCleanUrl}?view=true`;
+        if (wixShareUrlInput) {
+            wixShareUrlInput.value = wixShareableUrl;
+        }
+
+        // Save states to Firestore (Throttle updates slightly to ensure smooth sliding)
+        let saveTimeout = null;
+        function pushUpdateToCloud() {
+            if (isViewer) return; // Viewers on Wix never write data
+
+            if (saveTimeout) clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                syncStatusText.textContent = "● Saving Changes...";
+                syncStatusText.className = "text-amber-600 font-bold uppercase tracking-wider animate-pulse";
+                
+                docRef.set({
+                    parties: parties,
+                    autoBalanceMode: autoBalanceMode,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    syncStatusText.textContent = "● Synced Live";
+                    syncStatusText.className = "text-emerald-700 font-bold uppercase tracking-wider";
+                }).catch(err => {
+                    console.error("Firestore Save Error: ", err);
+                    syncStatusText.textContent = "● Offline Sync Error";
+                    syncStatusText.className = "text-red-600 font-bold uppercase tracking-wider";
+                });
+            }, 100);
+        }
+
+        // Establish real-time listen connection
+        function initializeLiveSync() {
+            docRef.onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    
+                    // Update local arrays with cloud database values
+                    if (data.parties) {
+                        parties = data.parties;
+                    }
+                    if (typeof data.autoBalanceMode !== 'undefined' && isViewer) {
+                        autoBalanceMode = data.autoBalanceMode;
+                        const balanceCheckbox = document.getElementById('balance-toggle');
+                        if (balanceCheckbox) balanceCheckbox.checked = autoBalanceMode;
+                    }
+                    
+                    syncStatusText.textContent = "● Synced Live";
+                    syncStatusText.className = "text-emerald-700 font-bold uppercase tracking-wider";
+                    
+                    // Rerender the visual elements
+                    updateLiveDisplays();
+                } else {
+                    // Initialize document on first run
+                    pushUpdateToCloud();
+                }
+            }, (err) => {
+                console.error("Firestore Listen Error: ", err);
+                syncStatusText.textContent = "● Sync Offline";
+                syncStatusText.className = "text-red-600 font-bold uppercase tracking-wider";
+            });
+        }
+
+        window.copyShareUrl = function() {
+            wixShareUrlInput.select();
+            document.execCommand('copy');
+            alert('Wix Live link copied! Paste this URL into the Website Address field of your Wix HTML Embed Widget.');
+        }
+
+        // ==========================================
+        // APP LOGIC & RENDERING
+        // ==========================================
 
         // Toggle Auto-Balance Mode
         window.toggleBalanceMode = function(isChecked) {
@@ -174,6 +296,7 @@
                 document.getElementById('unlocked-counter').classList.add('opacity-30');
             }
             refreshUI();
+            pushUpdateToCloud();
         }
 
         // Render the top horizontal banner boxes
@@ -232,6 +355,8 @@
 
         // Render controls panel (Call this only on full rebuilds to prevent focus loss)
         function renderControls() {
+            if (isViewer) return; // Never render sliders for the viewers embedded on Wix
+            
             controlsContainer.innerHTML = '';
             const unlockedCount = parties.filter(p => !p.locked).length;
             unlockedPartiesNum.textContent = unlockedCount;
@@ -324,6 +449,7 @@
 
         // Lightweight values update to avoid resetting cursor/focus of active elements
         function updateSeatDisplays() {
+            if (isViewer) return;
             parties.forEach((party, index) => {
                 const numInput = document.getElementById(`input-seats-${index}`);
                 const rangeInput = document.getElementById(`range-seats-${index}`);
@@ -358,6 +484,7 @@
             if (!autoBalanceMode) return;
             parties[index].locked = !parties[index].locked;
             renderControls();
+            pushUpdateToCloud();
         }
 
         // Direct Seat Set via Typing or slider
@@ -372,6 +499,7 @@
                 parties[index].seats = intValue;
                 updateLiveDisplays();
             }
+            pushUpdateToCloud();
         }
 
         // Quick Button adjust seats (+1, +10, etc.)
@@ -387,6 +515,7 @@
                 parties[index].seats = target;
                 updateLiveDisplays();
             }
+            pushUpdateToCloud();
         }
 
         // Direct Net Change value modifier
@@ -395,12 +524,14 @@
             if (isNaN(intValue)) intValue = 0;
             parties[index].change = intValue;
             updateLiveDisplays();
+            pushUpdateToCloud();
         }
 
         // Adjust Net Change by incrementing/decrementing
         window.adjustChange = function(index, delta) {
             parties[index].change += delta;
             updateLiveDisplays();
+            pushUpdateToCloud();
         }
 
         /**
@@ -419,7 +550,6 @@
             let total = calculateTotalSeats();
 
             if (total > TOTAL_SEATS_LIMIT) {
-                // We exceeded 200. We must subtract the excess from other unlocked parties.
                 let excess = total - TOTAL_SEATS_LIMIT;
                 const feedbackParties = parties.filter((p, idx) => !p.locked && idx !== changedIndex);
 
@@ -431,19 +561,16 @@
                     iterations++;
                     const candidates = feedbackParties.filter(p => p.seats > 0);
                     if (candidates.length === 0) {
-                        // Nowhere left to subtract from, so we must reduce the changed party's seats
                         parties[changedIndex].seats -= remainingToSubtract;
                         break;
                     }
 
-                    // Subtract 1 seat from each candidate evenly
                     for (let i = 0; i < candidates.length && remainingToSubtract > 0; i++) {
                         candidates[i].seats -= 1;
                         remainingToSubtract -= 1;
                     }
                 }
             } else if (total < TOTAL_SEATS_LIMIT) {
-                // We are below 200. In auto-balance mode, we must add the deficit to other unlocked parties to keep it at 200.
                 let deficit = TOTAL_SEATS_LIMIT - total;
                 const feedbackParties = parties.filter((p, idx) => !p.locked && idx !== changedIndex);
 
@@ -455,12 +582,10 @@
                     iterations++;
                     const candidates = feedbackParties.filter(p => p.seats < TOTAL_SEATS_LIMIT);
                     if (candidates.length === 0) {
-                        // Nowhere left to add to, so we must increase the changed party's seats
                         parties[changedIndex].seats += remainingToAdd;
                         break;
                     }
 
-                    // Add 1 seat to each candidate evenly
                     for (let i = 0; i < candidates.length && remainingToAdd > 0; i++) {
                         candidates[i].seats += 1;
                         remainingToAdd -= 1;
@@ -491,10 +616,8 @@
                 iterations++;
                 let activeCandidates = [];
                 if (difference > 0) {
-                    // Need to add seats to unlocked parties
                     activeCandidates = feedbackParties.filter(p => p.seats < TOTAL_SEATS_LIMIT);
                 } else {
-                    // Need to remove seats from unlocked parties
                     activeCandidates = feedbackParties.filter(p => p.seats > 0);
                 }
 
@@ -539,6 +662,7 @@
                 parties[5].seats = 10;
             }
             refreshUI();
+            pushUpdateToCloud();
         }
 
         // Reset all seats to absolute zero
@@ -558,6 +682,7 @@
                 autoBalanceMode = false;
                 refreshUI();
             }
+            pushUpdateToCloud();
         }
 
         // Calculate current aggregate seats
@@ -598,6 +723,8 @@
         // On window load
         window.onload = function() {
             refreshUI();
+            // Start listening to live changes
+            initializeLiveSync();
         };
     </script>
 </body>
